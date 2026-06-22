@@ -1,0 +1,6 @@
+{
+  "name": "Certiva TUV",
+  "description": "A corporate training website for Certiva TUV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

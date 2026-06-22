@@ -202,7 +202,8 @@ app.get("/api/verify/:id", async (req, res) => {
         project: trainee.project,
         validUntil: trainee.expiryDate,
         status: trainee.status,
-        iqama: trainee.iqama
+        iqama: trainee.iqama,
+        photoUrl: trainee.photoUrl
       }
     });
   }

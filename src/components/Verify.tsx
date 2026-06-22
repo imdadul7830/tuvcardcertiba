@@ -43,7 +43,7 @@ export default function Verify() {
             Scan the QR code on the certificate or ID card, or manually enter the Certificate Number / ID Number below to verify authenticity.
           </p>
           <div className="mt-4 text-sm text-gray-400">
-            (Hint: Try <span className="font-mono bg-gray-200 px-1 rounded text-gray-700">CERT-123</span> or <span className="font-mono bg-gray-200 px-1 rounded text-gray-700">ID-123</span>)
+            (Hint: Try <span className="font-mono bg-gray-200 px-1 rounded text-gray-700">CERT-123</span> or <span className="font-mono bg-gray-200 px-1 rounded text-gray-700">2345678901</span>)
           </div>
         </div>
 
@@ -58,7 +58,7 @@ export default function Verify() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-11 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-lg bg-gray-50 shadow-inner"
-                placeholder="Enter Certificate No. or ID Number (e.g., CERT-12345)"
+                placeholder="Enter Certificate No. or ID Number (e.g., 2345678901)"
               />
             </div>
             <button
@@ -96,48 +96,61 @@ export default function Verify() {
                   </span>
                 </div>
                 <div className="p-6">
-                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Name</dt>
-                      <dd className="mt-1 text-lg font-semibold text-gray-900">{result.data.name}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Credential ID</dt>
-                      <dd className="mt-1 text-lg font-mono text-gray-900">{result.data.id}</dd>
-                    </div>
-                    
-                    {result.type === 'certificate' ? (
-                      <>
-                        <div className="sm:col-span-2">
-                          <dt className="text-sm font-medium text-gray-500">Approved Course / Training</dt>
-                          <dd className="mt-1 text-lg font-medium text-gray-900 bg-gray-50 p-3 rounded border border-gray-100">{result.data.course}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Issue Date</dt>
-                          <dd className="mt-1 text-base text-gray-900">{result.data.issueDate}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Valid Until</dt>
-                          <dd className="mt-1 text-base text-gray-900">{result.data.expiryDate}</dd>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="sm:col-span-2">
-                          <dt className="text-sm font-medium text-gray-500">Role / Title</dt>
-                          <dd className="mt-1 text-lg font-medium text-gray-900">{result.data.role}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Organization</dt>
-                          <dd className="mt-1 text-base text-gray-900">{result.data.organization}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Valid Until</dt>
-                          <dd className="mt-1 text-base text-gray-900">{result.data.validUntil}</dd>
-                        </div>
-                      </>
+                  <div className="flex flex-col sm:flex-row gap-6">
+                    {result.data.photoUrl && (
+                      <div className="flex-shrink-0">
+                        <img 
+                          src={result.data.photoUrl} 
+                          alt={result.data.name} 
+                          className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
+                        />
+                      </div>
                     )}
-                  </dl>
+                    <div className="flex-grow">
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+                        <div>
+                          <dt className="text-sm font-medium text-gray-500">Name</dt>
+                          <dd className="mt-1 text-lg font-semibold text-gray-900">{result.data.name}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-medium text-gray-500">Credential ID</dt>
+                          <dd className="mt-1 text-lg font-mono text-gray-900">{result.data.id}</dd>
+                        </div>
+                        
+                        {result.type === 'certificate' ? (
+                          <>
+                            <div className="sm:col-span-2">
+                              <dt className="text-sm font-medium text-gray-500">Approved Course / Training</dt>
+                              <dd className="mt-1 text-lg font-medium text-gray-900 bg-gray-50 p-3 rounded border border-gray-100">{result.data.course}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Issue Date</dt>
+                              <dd className="mt-1 text-base text-gray-900">{result.data.issueDate}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Valid Until</dt>
+                              <dd className="mt-1 text-base text-gray-900">{result.data.expiryDate}</dd>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="sm:col-span-2">
+                              <dt className="text-sm font-medium text-gray-500">Role / Title</dt>
+                              <dd className="mt-1 text-lg font-medium text-gray-900">{result.data.role}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Organization</dt>
+                              <dd className="mt-1 text-base text-gray-900">{result.data.organization}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Valid Until</dt>
+                              <dd className="mt-1 text-base text-gray-900">{result.data.validUntil}</dd>
+                            </div>
+                          </>
+                        )}
+                      </dl>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
+import VerifyPage from './pages/VerifyPage';
 import { ContentProvider } from './context/ContentContext';
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/verify/:id" element={<VerifyPage />} />
           </Routes>
         </div>
       </ContentProvider>

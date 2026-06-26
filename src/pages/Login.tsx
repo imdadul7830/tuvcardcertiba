@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Lock, User } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -41,6 +42,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <Helmet>
+        <title>Admin Login - Certiva TUV</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <ShieldCheck className="h-16 w-16 text-blue-700" />

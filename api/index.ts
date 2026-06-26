@@ -1,7 +1,7 @@
 import express from "express";
 import { db } from "../src/db/index";
 import { users, trainees, settings, siteContent } from "../src/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { seedDatabase } from "../src/db/seed";
 
 const app = express();
@@ -187,7 +187,7 @@ app.post("/api/branches", async (req, res) => {
 app.get("/api/verify/:id", async (req, res) => {
   const { id } = req.params;
   
-  const matchedTrainees = await db.select().from(trainees).where(eq(trainees.id, id));
+  const matchedTrainees = await db.select().from(trainees).where(or(eq(trainees.id, id), eq(trainees.iqama, id)));
   const trainee = matchedTrainees[0];
   
   if (trainee) {

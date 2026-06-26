@@ -140,25 +140,46 @@ export default function IdCardView({ trainee }: IdCardProps) {
 
           {/* Middle Stamp & Box */}
           <div className="flex-1 flex px-8 items-center justify-between">
-            {/* Round Stamp */}
-            <div className="w-48 h-48 rounded-full border-4 border-blue-900/80 flex items-center justify-center relative transform -rotate-12">
-               <div className="absolute inset-2 border border-blue-900/80 rounded-full border-dashed"></div>
-               <div className="text-center">
-                 <div className="flex justify-center mb-1"><Cog className="w-8 h-8 text-blue-900/80" /></div>
-                 <div className="text-blue-900/80 font-bold text-sm tracking-tight border-y border-blue-900/80 py-1 mb-1">
-                   Certiva TÜV
+            {/* Realistic Round Stamp */}
+            <div className="relative w-48 h-48 flex items-center justify-center transform -rotate-12 mix-blend-multiply opacity-90">
+               {/* Stamp Outer Rings */}
+               <div className="absolute inset-0 rounded-full border-[4px] border-red-700/85"></div>
+               <div className="absolute inset-[5px] rounded-full border-[1px] border-red-700/85"></div>
+               <div className="absolute inset-[30px] rounded-full border-[1.5px] border-red-700/85"></div>
+               
+               {/* Stamp Inner Content */}
+               <div className="text-center z-10 pt-1">
+                 <div className="flex justify-center mb-1"><Shield className="w-7 h-7 text-red-700/85" /></div>
+                 <div className="text-red-700/85 font-black text-xl tracking-tighter border-y-[1.5px] border-red-700/85 py-1 mb-1 transform scale-y-110">
+                   CERTIVA TÜV
                  </div>
-                 <div className="text-blue-900/80 font-bold text-[8px] uppercase tracking-widest">
-                   INSPECTION & TESTING
+                 <div className="text-red-700/85 font-bold text-[8px] uppercase tracking-widest mt-1">
+                   OFFICIAL SEAL
                  </div>
                </div>
-               {/* Outer circular text mock - CSS trick or just simple placement */}
+
+               {/* Outer circular text */}
                <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full overflow-visible pointer-events-none">
-                 <path id="curve" d="M 10 50 A 40 40 0 1 1 90 50 A 40 40 0 1 1 10 50" fill="transparent" />
-                 <text className="text-[6px] font-bold fill-blue-900/80 uppercase tracking-[0.2em] origin-center">
-                   <textPath href="#curve" startOffset="0%">★ CERTIVA TUV CO. LTD. ★ APPROVED TRAINING PROVIDER</textPath>
+                 <path id="topCurve" d="M 16 50 a 34 34 0 0 1 68 0" fill="transparent" />
+                 <path id="bottomCurve" d="M 16 50 a 34 34 0 0 0 68 0" fill="transparent" />
+                 <text className="text-[7.5px] font-bold fill-red-700/85 uppercase tracking-widest">
+                   <textPath href="#topCurve" startOffset="50%" textAnchor="middle">★ CERTIVA TUV CO. LTD. ★</textPath>
+                 </text>
+                 <text className="text-[7px] font-bold fill-red-700/85 uppercase tracking-widest">
+                   <textPath href="#bottomCurve" startOffset="50%" textAnchor="middle">INSPECTION &amp; TRAINING</textPath>
                  </text>
                </svg>
+
+               {/* Stamp noise texture overlay */}
+               <div className="absolute inset-0 rounded-full mix-blend-overlay opacity-40 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stucco.png')]"></div>
+
+               {/* Handwritten Signature Overlay */}
+               <div className="absolute -right-4 bottom-8 transform -rotate-12 opacity-80 z-20 pointer-events-none">
+                 <svg width="120" height="60" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                   <path d="M10 40 C 20 20, 30 15, 40 35 C 50 55, 60 45, 70 25 C 80 5, 90 25, 100 45 C 110 55, 115 40, 118 35" stroke="#0284c7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                   <path d="M35 30 L 65 25" stroke="#0284c7" strokeWidth="2.5" strokeLinecap="round" />
+                 </svg>
+               </div>
             </div>
 
             {/* Level Box */}

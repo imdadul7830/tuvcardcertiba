@@ -6,6 +6,7 @@ import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { useSiteContent } from '../context/ContentContext';
 import SiteContentEditor from '../components/SiteContentEditor';
+import { Helmet } from 'react-helmet-async';
 
 interface Trainee {
   id: string;
@@ -296,6 +297,10 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+      <Helmet>
+        <title>Admin Dashboard - Certiva TUV</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Sidebar */}
       <div className="w-full md:w-64 bg-slate-900 text-white flex flex-col flex-shrink-0">
         <div className="p-6 flex items-center gap-3 border-b border-slate-800">

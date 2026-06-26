@@ -1,3 +1,4 @@
+import "express-async-errors";
 import express from "express";
 import { db } from "../src/db/index";
 import { users, trainees, settings, siteContent } from "../src/db/schema";
@@ -273,6 +274,11 @@ app.post("/api/contact", (req, res) => {
     success: true, 
     message: "Thank you for contacting Certiva TUV. We will get back to you shortly." 
   });
+});
+
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("Unhandled error in API route:", err);
+  res.status(500).json({ success: false, message: "Internal server error" });
 });
 
 export default app;

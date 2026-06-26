@@ -26,7 +26,7 @@ app.post("/api/admin/login", async (req, res) => {
   const userRecords = await db.select().from(users).where(eq(users.username, username));
   const user = userRecords[0];
   if (user && user.password === password) {
-    res.json({ success: true, token: "mock-jwt-token", user: { id: user.id, username: user.username, name: user.name } });
+    res.json({ success: true, token: "mock-jwt-token", user: { id: user.id, username: user.username, name: user.name, role: user.role } });
   } else {
     res.status(401).json({ success: false, message: "Invalid credentials" });
   }
@@ -35,22 +35,22 @@ app.post("/api/admin/login", async (req, res) => {
 // Get all users
 app.get("/api/users", async (req, res) => {
   const allUsers = await db.select().from(users);
-  const safeUsers = allUsers.map(u => ({ id: u.id, username: u.username, name: u.name }));
+  const safeUsers = allUsers.map(u => ({ id: u.id, username: u.username, name: u.name, role: u.role }));
   res.json(safeUsers);
 });
 
 // Add new user
 app.post("/api/users", async (req, res) => {
-  const { username, password, name } = req.body;
+  const { username, password, name, role } = req.body;
   const existing = await db.select().from(users).where(eq(users.username, username));
   if (existing.length > 0) {
     return res.status(400).json({ success: false, message: "Username already exists" });
   }
   const newId = Date.now().toString();
-  await db.insert(users).values({ id: newId, username, password, name });
+  await db.insert(users).values({ id: newId, username, password, name, role: role || 'user' });
   
   const allUsers = await db.select().from(users);
-  const safeUsers = allUsers.map(u => ({ id: u.id, username: u.username, name: u.name }));
+  const safeUsers = allUsers.map(u => ({ id: u.id, username: u.username, name: u.name, role: u.role }));
   res.json({ success: true, users: safeUsers });
 });
 
@@ -103,13 +103,21 @@ app.put("/api/content", async (req, res) => {
 
 // Get all trainees
 app.get("/api/trainees", async (req, res) => {
-  const allTrainees = await db.select().from(trainees);
+  const userId = req.query.userId as string;
+  const role = req.query.role as string;
+
+  let allTrainees;
+  if (role === 'user' && userId) {
+    allTrainees = await db.select().from(trainees).where(eq(trainees.addedBy, userId));
+  } else {
+    allTrainees = await db.select().from(trainees);
+  }
   res.json(allTrainees);
 });
 
 // Add new trainee
 app.post("/api/trainees", async (req, res) => {
-  const { name, iqama, company, project, course, photoUrl, issueDate, expiryDate, trainedBy, approvedBy, levelCategory } = req.body;
+  const { name, iqama, company, project, course, photoUrl, issueDate, expiryDate, trainedBy, approvedBy, levelCategory, addedBy } = req.body;
   
   // Generate simple ID if none provided, or use iqama
   const newId = iqama || `ID-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(100 + Math.random() * 900)}`;
@@ -127,11 +135,38 @@ app.post("/api/trainees", async (req, res) => {
     trainedBy: trainedBy || "Certiva Instructor",
     approvedBy: approvedBy || "Certiva Admin",
     levelCategory: levelCategory || "NA",
-    status: "Valid"
+    status: "Valid",
+    addedBy: addedBy || null
   };
 
   await db.insert(trainees).values(newTrainee);
   res.json({ success: true, trainee: newTrainee });
+});
+
+// Update trainee
+app.put("/api/trainees/:id", async (req, res) => {
+  const { id } = req.params;
+  const { name, iqama, company, project, course, photoUrl, issueDate, expiryDate, trainedBy, approvedBy, levelCategory } = req.body;
+  
+  const updatedTrainee = {
+    name,
+    iqama,
+    company,
+    project: project || "N/A",
+    course,
+    photoUrl: photoUrl || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=256&h=256",
+    issueDate,
+    expiryDate,
+    trainedBy,
+    approvedBy,
+    levelCategory,
+  };
+
+  await db.update(trainees).set(updatedTrainee).where(eq(trainees.id, id));
+  
+  const fetched = await db.select().from(trainees).where(eq(trainees.id, id));
+  
+  res.json({ success: true, trainee: fetched[0] });
 });
 
 // Delete trainee

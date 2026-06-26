@@ -58,31 +58,31 @@ export default function IdCardView({ trainee }: IdCardProps) {
             </div>
 
             {/* Details */}
-            <div className="flex-1 pl-6 flex flex-col justify-center space-y-2.5">
-              <div className="flex items-center text-sm font-bold text-gray-900 uppercase">
+            <div className="flex-1 min-w-0 pl-6 flex flex-col justify-center space-y-2.5">
+              <div className="flex items-center text-sm font-bold text-gray-900 uppercase min-w-0">
                 <span className="w-24 flex-shrink-0 text-gray-700">NAME :</span>
-                <span className="truncate">{trainee.name}</span>
+                <span className="truncate block w-full">{trainee.name}</span>
               </div>
-              <div className="flex items-center text-sm font-bold text-gray-900 uppercase">
+              <div className="flex items-center text-sm font-bold text-gray-900 uppercase min-w-0">
                 <span className="w-24 flex-shrink-0 text-gray-700">ID NO :</span>
-                <span>{trainee.iqama}</span>
+                <span className="truncate block w-full">{trainee.iqama}</span>
               </div>
-              <div className="flex items-center text-sm font-bold text-gray-900 uppercase">
+              <div className="flex items-center text-sm font-bold text-gray-900 uppercase min-w-0">
                 <span className="w-24 flex-shrink-0 text-gray-700">ISSUED :</span>
-                <span>{new Date(trainee.issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase().replace(/ /g, '-')}</span>
+                <span className="truncate block w-full">{new Date(trainee.issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase().replace(/ /g, '-')}</span>
               </div>
-              <div className="flex items-center text-sm font-bold text-gray-900 uppercase">
+              <div className="flex items-center text-sm font-bold text-gray-900 uppercase min-w-0">
                 <span className="w-24 flex-shrink-0 text-gray-700">EXPIRY :</span>
-                <span>{new Date(trainee.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase().replace(/ /g, '-')}</span>
+                <span className="truncate block w-full">{new Date(trainee.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase().replace(/ /g, '-')}</span>
               </div>
-              <div className="flex items-center text-sm font-bold text-gray-900 uppercase">
+              <div className="flex items-center text-sm font-bold text-gray-900 uppercase min-w-0">
                 <span className="w-24 flex-shrink-0 text-gray-700">COMPANY :</span>
-                <span className="truncate">{trainee.company}</span>
+                <span className="truncate block w-full">{trainee.company}</span>
               </div>
               {trainee.project !== "N/A" && (
-                <div className="flex items-center text-sm font-bold text-gray-900 uppercase">
+                <div className="flex items-center text-sm font-bold text-gray-900 uppercase min-w-0">
                   <span className="w-24 flex-shrink-0 text-gray-700">PROJECT :</span>
-                  <span className="truncate">{trainee.project}</span>
+                  <span className="truncate block w-full">{trainee.project}</span>
                 </div>
               )}
             </div>
@@ -108,7 +108,7 @@ export default function IdCardView({ trainee }: IdCardProps) {
 
             <div className="text-center px-4">
               <p className="text-[11px] font-bold text-gray-900 uppercase tracking-tighter">Olayya Street, King Fahd District, Riyadh 11543, Saudi Arabia | Telephone: +966 11 412 8734</p>
-              <p className="text-[11px] font-bold text-gray-900 uppercase tracking-tighter">Fax : +966 11 412 8735 Email: info@certiva-tuv.com Website : www.certiva-tuv.com</p>
+              <p className="text-[11px] font-bold text-gray-900 uppercase tracking-tighter">Fax : +966 11 412 8735 Email: info@certivatuv.com Website : www.certivatuv.com</p>
             </div>
           </div>
         </div>
@@ -143,31 +143,24 @@ export default function IdCardView({ trainee }: IdCardProps) {
             {/* Realistic Round Stamp */}
             <div className="relative w-48 h-48 flex items-center justify-center transform -rotate-12 mix-blend-multiply opacity-90">
                {/* Stamp Outer Rings */}
-               <div className="absolute inset-0 rounded-full border-[4px] border-red-700/85"></div>
-               <div className="absolute inset-[5px] rounded-full border-[1px] border-red-700/85"></div>
-               <div className="absolute inset-[30px] rounded-full border-[1.5px] border-red-700/85"></div>
-               
-               {/* Stamp Inner Content */}
-               <div className="text-center z-10 pt-1">
-                 <div className="flex justify-center mb-1"><Shield className="w-7 h-7 text-red-700/85" /></div>
-                 <div className="text-red-700/85 font-black text-xl tracking-tighter border-y-[1.5px] border-red-700/85 py-1 mb-1 transform scale-y-110">
-                   CERTIVA TÜV
-                 </div>
-                 <div className="text-red-700/85 font-bold text-[8px] uppercase tracking-widest mt-1">
-                   OFFICIAL SEAL
-                 </div>
-               </div>
-
-               {/* Outer circular text */}
-               <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full overflow-visible pointer-events-none">
-                 <path id="topCurve" d="M 16 50 a 34 34 0 0 1 68 0" fill="transparent" />
-                 <path id="bottomCurve" d="M 16 50 a 34 34 0 0 0 68 0" fill="transparent" />
-                 <text className="text-[7.5px] font-bold fill-red-700/85 uppercase tracking-widest">
-                   <textPath href="#topCurve" startOffset="50%" textAnchor="middle">★ CERTIVA TUV CO. LTD. ★</textPath>
-                 </text>
-                 <text className="text-[7px] font-bold fill-red-700/85 uppercase tracking-widest">
-                   <textPath href="#bottomCurve" startOffset="50%" textAnchor="middle">INSPECTION &amp; TRAINING</textPath>
-                 </text>
+               <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full drop-shadow-sm pointer-events-none">
+                 <circle cx="100" cy="100" r="95" fill="none" stroke="#0f3b7f" strokeWidth="4" />
+                 <circle cx="100" cy="100" r="88" fill="none" stroke="#0f3b7f" strokeWidth="1.5" />
+                 <circle cx="100" cy="100" r="60" fill="none" stroke="#0f3b7f" strokeWidth="1.5" />
+                 <circle cx="100" cy="100" r="56" fill="none" stroke="#0f3b7f" strokeWidth="3" />
+                 <path id="topText" d="M 22 100 A 78 78 0 0 1 178 100" fill="transparent" />
+                 <path id="bottomText" d="M 22 100 A 78 78 0 0 0 178 100" fill="transparent" />
+                 <text className="text-[22px] font-bold fill-[#0f3b7f] font-serif tracking-widest"><textPath href="#topText" startOffset="50%" textAnchor="middle">CERTIVA TUV</textPath></text>
+                 <text className="text-[17px] font-bold fill-[#0f3b7f] font-serif tracking-[0.05em]"><textPath href="#bottomText" startOffset="50%" textAnchor="middle">INSPECTION &amp; TRAINING</textPath></text>
+                 <g transform="translate(13, 91) scale(0.7)" fill="#0f3b7f"><polygon points="12.5,0 16,8 25,9 18.5,14.5 20,23 12.5,18.5 5,23 6.5,14.5 0,9 9,8" /></g>
+                 <g transform="translate(169, 91) scale(0.7)" fill="#0f3b7f"><polygon points="12.5,0 16,8 25,9 18.5,14.5 20,23 12.5,18.5 5,23 6.5,14.5 0,9 9,8" /></g>
+                 <text x="100" y="85" textAnchor="middle" className="text-[36px] font-black fill-[#0f3b7f] font-sans tracking-tight">TüV</text>
+                 <line x1="45" y1="95" x2="155" y2="95" stroke="#0f3b7f" strokeWidth="2" />
+                 <text x="100" y="118" textAnchor="middle" className="text-[18px] font-bold fill-[#0f3b7f] font-sans tracking-widest">CERTIVA</text>
+                 <path d="M 85 130 L 95 140 L 115 115" fill="none" stroke="#0f3b7f" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                 <path d="M 55 184 A 95 95 0 0 0 145 184" fill="none" stroke="#0f3b7f" strokeWidth="16" />
+                 <path id="bottomBadgeTextPath" d="M 55 182 A 93 93 0 0 0 145 182" fill="transparent" />
+                 <text className="text-[10px] font-bold fill-white tracking-[0.2em] uppercase"><textPath href="#bottomBadgeTextPath" startOffset="50%" textAnchor="middle">OFFICIAL SEAL</textPath></text>
                </svg>
 
                {/* Stamp noise texture overlay */}

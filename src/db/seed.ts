@@ -103,7 +103,7 @@ export async function seedDatabase() {
         ],
         contact: {
           phone: "+966 11 412 8734",
-          email: "info@certiva-tuv.com",
+          email: "info@certivatuv.com",
           address: "Olayya Street, King Fahd District, Riyadh 11543, Saudi Arabia",
           fax: "+966 11 412 8735"
         },

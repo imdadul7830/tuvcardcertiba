@@ -33,33 +33,33 @@ export default function Footer() {
           <div>
             <h3 className="text-sm font-semibold tracking-wider text-white uppercase mb-4">Services</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Certification</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Testing</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Inspection</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Training & Education</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Digital & IT</a></li>
+              <li><a href="/certification" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Certification</a></li>
+              <li><a href="/testing" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Testing</a></li>
+              <li><a href="/inspection" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Inspection</a></li>
+              <li><a href="/training-education" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Training & Education</a></li>
+              <li><a href="/digital-it" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Digital & IT</a></li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-sm font-semibold tracking-wider text-white uppercase mb-4">Industries</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Energy & Utilities</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Oil & Gas</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Infrastructure</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Healthcare</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Mobility</a></li>
+              <li><a href="/energy-utilities" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Energy & Utilities</a></li>
+              <li><a href="/oil-gas" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Oil & Gas</a></li>
+              <li><a href="/infrastructure" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Infrastructure</a></li>
+              <li><a href="/healthcare" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Healthcare</a></li>
+              <li><a href="/mobility" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Mobility</a></li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-sm font-semibold tracking-wider text-white uppercase mb-4">Company</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">About Us</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Careers</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Press</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Locations</a></li>
-              <li><a href="#" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Contact</a></li>
+              <li><a href="/about-us" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">About Us</a></li>
+              <li><a href="/careers" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Careers</a></li>
+              <li><a href="/press" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Press</a></li>
+              <li><a href="/locations" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Locations</a></li>
+              <li><a href="/contact" className="text-sm text-gray-400 hover:text-blue-400 transition-colors">Contact</a></li>
             </ul>
           </div>
 
@@ -70,10 +70,9 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Certiva TÜV. All rights reserved.
           </p>
           <div className="flex space-x-6 text-sm">
-            <a href="/login" className="text-gray-500 hover:text-white transition-colors">Admin Login</a>
-            <a href="#" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="text-gray-500 hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="text-gray-500 hover:text-white transition-colors">Imprint</a>
+            <a href="/privacy-policy" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</a>
+            <a href="/terms-of-service" className="text-gray-500 hover:text-white transition-colors">Terms of Service</a>
+            <a href="/imprint" className="text-gray-500 hover:text-white transition-colors">Imprint</a>
           </div>
         </div>
       </div>

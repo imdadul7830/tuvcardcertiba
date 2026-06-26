@@ -28,6 +28,7 @@ interface AppUser {
   id: string;
   username: string;
   name: string;
+  role?: string;
 }
 
 export default function Admin() {
@@ -41,6 +42,7 @@ export default function Admin() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null);
+  const [editingTraineeId, setEditingTraineeId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Form states
@@ -64,6 +66,7 @@ export default function Admin() {
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newUserName, setNewUserName] = useState('');
+  const [newUserRole, setNewUserRole] = useState('user');
 
   // Password change
   const [passwordChangeTarget, setPasswordChangeTarget] = useState<string | null>(null);
@@ -77,8 +80,10 @@ export default function Admin() {
       return;
     }
     const savedUser = localStorage.getItem('adminUser');
+    let user = null;
     if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
+      user = JSON.parse(savedUser);
+      setCurrentUser(user);
     }
 
     const initDate = new Date().toISOString().split('T')[0];
@@ -87,13 +92,15 @@ export default function Admin() {
     nextYear.setFullYear(nextYear.getFullYear() + 1);
     setExpiryDate(nextYear.toISOString().split('T')[0]);
 
-    fetchData();
+    fetchData(user);
   }, [navigate]);
 
-  const fetchData = async () => {
+  const fetchData = async (user: AppUser | null) => {
     try {
+      const isAdmin = user?.role !== 'user' || user?.username === 'admin';
+      const traineeUrl = !isAdmin ? `/api/trainees?userId=${user.id}&role=user` : '/api/trainees';
       const [traineesRes, settingsRes, usersRes] = await Promise.all([
-        fetch('/api/trainees'),
+        fetch(traineeUrl),
         fetch('/api/settings'),
         fetch('/api/users')
       ]);
@@ -125,17 +132,25 @@ export default function Admin() {
     setIsAdding(true);
 
     try {
-      const res = await fetch('/api/trainees', {
-        method: 'POST',
+      const url = editingTraineeId ? `/api/trainees/${editingTraineeId}` : '/api/trainees';
+      const method = editingTraineeId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, iqama, company, project, course, photoUrl, issueDate, expiryDate, trainedBy, approvedBy, levelCategory })
+        body: JSON.stringify({ name, iqama, company, project, course, photoUrl, issueDate, expiryDate, trainedBy, approvedBy, levelCategory, addedBy: currentUser?.id })
       });
       
       const data = await res.json();
       if (data.success) {
-        setTrainees([data.trainee, ...trainees]);
+        if (editingTraineeId) {
+          setTrainees(trainees.map(t => t.id === editingTraineeId ? data.trainee : t));
+          setEditingTraineeId(null);
+        } else {
+          setTrainees([data.trainee, ...trainees]);
+        }
         // Reset form
         setName('');
         setIqama('');
@@ -147,6 +162,22 @@ export default function Admin() {
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleEditClick = (trainee: Trainee) => {
+    setEditingTraineeId(trainee.id);
+    setName(trainee.name);
+    setIqama(trainee.iqama);
+    setCompany(trainee.company);
+    setCourse(trainee.course);
+    setProject(trainee.project);
+    setPhotoUrl(trainee.photoUrl);
+    setIssueDate(trainee.issueDate);
+    setExpiryDate(trainee.expiryDate);
+    setTrainedBy(trainee.trainedBy);
+    setApprovedBy(trainee.approvedBy);
+    setLevelCategory(trainee.levelCategory);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAddCourse = async (e: React.FormEvent) => {
@@ -202,7 +233,7 @@ export default function Admin() {
       const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: newUsername, password: newPassword, name: newUserName })
+        body: JSON.stringify({ username: newUsername, password: newPassword, name: newUserName, role: newUserRole })
       });
       const data = await res.json();
       if (data.success) {
@@ -210,6 +241,7 @@ export default function Admin() {
         setNewUsername('');
         setNewPassword('');
         setNewUserName('');
+        setNewUserRole('user');
       } else {
         alert(data.message);
       }
@@ -315,24 +347,28 @@ export default function Admin() {
                 Trainees
               </button>
             </li>
-            <li>
-              <button onClick={() => setActiveTab('users')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'users' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
-                <UserCog className="w-5 h-5 text-blue-400" />
-                Users
-              </button>
-            </li>
-            <li>
-              <button onClick={() => setActiveTab('settings')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'settings' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
-                <ShieldCheck className="w-5 h-5 text-blue-400" />
-                Projects & Courses
-              </button>
-            </li>
-            <li>
-              <button onClick={() => setActiveTab('site')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'site' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
-                <PanelTop className="w-5 h-5 text-blue-400" />
-                Site Content
-              </button>
-            </li>
+            {(currentUser?.role !== 'user' || currentUser?.username === 'admin') && (
+              <>
+                <li>
+                  <button onClick={() => setActiveTab('users')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'users' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
+                    <UserCog className="w-5 h-5 text-blue-400" />
+                    Users
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => setActiveTab('settings')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'settings' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
+                    <ShieldCheck className="w-5 h-5 text-blue-400" />
+                    Projects & Courses
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => setActiveTab('site')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'site' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
+                    <PanelTop className="w-5 h-5 text-blue-400" />
+                    Site Content
+                  </button>
+                </li>
+              </>
+            )}
           </ul>
         </div>
         <div className="p-4 border-t border-slate-800">
@@ -428,6 +464,13 @@ export default function Admin() {
                     <label className="block text-sm font-medium text-gray-700">Password</label>
                     <input required type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-gray-50" />
                  </div>
+                 <div>
+                    <label className="block text-sm font-medium text-gray-700">Role</label>
+                    <select required value={newUserRole} onChange={e=>setNewUserRole(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-gray-50">
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                 </div>
                  <button type="submit" className="w-full bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-800 font-medium mt-2">Create User</button>
                </form>
             </div>
@@ -439,6 +482,7 @@ export default function Admin() {
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                       </tr>
                     </thead>
@@ -450,6 +494,11 @@ export default function Admin() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-500">{user.username}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>
+                              {user.role || 'user'}
+                            </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             {passwordChangeTarget === user.id ? (
@@ -483,10 +532,23 @@ export default function Admin() {
           
           {/* Add Trainee Form */}
           <div className="xl:col-span-1 border border-gray-200 bg-white rounded-xl shadow-sm p-6 self-start">
-            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <Plus className="w-5 h-5 text-blue-700" />
-              Add Trainee
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Plus className="w-5 h-5 text-blue-700" />
+                {editingTraineeId ? 'Edit Trainee' : 'Add Trainee'}
+              </h2>
+              {editingTraineeId && (
+                <button 
+                  onClick={() => {
+                    setEditingTraineeId(null);
+                    setName(''); setIqama(''); setCompany(''); setPhotoUrl('');
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Cancel Edit
+                </button>
+              )}
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -560,7 +622,7 @@ export default function Admin() {
               </div>
 
               <button disabled={isAdding || !course} type="submit" className="w-full mt-2 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50">
-                {isAdding ? 'Processing...' : 'Generate Profile & ID'}
+                {isAdding ? 'Processing...' : (editingTraineeId ? 'Update Profile & ID' : 'Generate Profile & ID')}
               </button>
             </form>
           </div>
@@ -607,6 +669,7 @@ export default function Admin() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                         <button onClick={() => setSelectedTrainee(trainee)} className="text-blue-600 hover:text-blue-900">View ID</button>
+                        <button onClick={() => handleEditClick(trainee)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
                         <button onClick={() => deleteTrainee(trainee.id)} className="text-red-600 hover:text-red-900">Delete</button>
                       </td>
                     </tr>

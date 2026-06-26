@@ -8,7 +8,7 @@ export default function Contact() {
   const { content } = useSiteContent();
   const contactInfo = content?.contact || {
     phone: "+966 11 412 8734",
-    email: "hello@certiva-tuv.com",
+    email: "hello@certivatuv.com",
     address: "Olayya Street, King Fahd District, Riyadh 11543, Kingdom of Saudi Arabia",
     fax: ""
   };

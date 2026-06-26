@@ -5,6 +5,7 @@ export const users = pgTable('users', {
   username: text('username').unique().notNull(),
   password: text('password').notNull(),
   name: text('name').notNull(),
+  role: text('role').notNull().default('user'),
 });
 
 export const trainees = pgTable('trainees', {
@@ -21,6 +22,7 @@ export const trainees = pgTable('trainees', {
   approvedBy: text('approved_by').notNull(),
   levelCategory: text('level_category').notNull(),
   status: text('status').notNull(),
+  addedBy: text('added_by'),
 });
 
 export const settings = pgTable('settings', {

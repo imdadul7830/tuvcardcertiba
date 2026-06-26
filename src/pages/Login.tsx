@@ -110,9 +110,6 @@ export default function Login() {
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
             </div>
-            <div className="text-center text-xs text-gray-500">
-              Hint: Use admin / admin123
-            </div>
           </form>
         </div>
       </div>

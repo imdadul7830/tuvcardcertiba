@@ -27,8 +27,47 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const httpServer = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
+  });
+
+  // --- Socket.io Setup ---
+  const { Server } = await import("socket.io");
+  const io = new Server(httpServer, {
+    cors: { origin: "*" }
+  });
+
+  io.on("connection", (socket) => {
+    console.log("Client connected:", socket.id);
+
+    socket.on("join-admin", () => {
+      socket.join("admins");
+      console.log("Admin joined chat:", socket.id);
+    });
+
+    socket.on("join-user", (userId) => {
+      socket.join(`user_${userId}`);
+      console.log("User joined chat:", userId);
+    });
+
+    socket.on("send-message", (data) => {
+      // data: { sender: 'admin' | 'user', userId: string, text: string }
+      if (data.sender === 'user') {
+        // Send to admins
+        io.to("admins").emit("receive-message", data);
+        // Echo to the sender user
+        io.to(`user_${data.userId}`).emit("receive-message", data);
+      } else {
+        // Send to specific user
+        io.to(`user_${data.userId}`).emit("receive-message", data);
+        // Echo to admins
+        io.to("admins").emit("receive-message", data);
+      }
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
+    });
   });
 }
 

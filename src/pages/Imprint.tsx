@@ -20,15 +20,15 @@ export default function Imprint() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">Information in accordance with legal requirements</h2>
             <div className="space-y-1">
               <p className="font-medium text-gray-900">Certiva TUV Co. Ltd.</p>
-              <p>{content?.contactSection?.address || '123 Business Avenue, Tech District, City, Country'}</p>
+              <p>{content?.contact?.address || '123 Business Avenue, Tech District, City, Country'}</p>
             </div>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">Contact</h2>
             <div className="space-y-1">
-              <p>Email: <a href={`mailto:${content?.contactSection?.email}`} className="text-blue-600 hover:underline">{content?.contactSection?.email || 'info@certivatuv.com'}</a></p>
-              <p>Phone: <a href={`tel:${content?.contactSection?.phone}`} className="text-blue-600 hover:underline">{content?.contactSection?.phone || '+1 234 567 890'}</a></p>
+              <p>Email: <a href={`mailto:${content?.contact?.email}`} className="text-blue-600 hover:underline">{content?.contact?.email || 'info@certivatuv.com'}</a></p>
+              <p>Phone: <a href={`tel:${content?.contact?.phone}`} className="text-blue-600 hover:underline">{content?.contact?.phone || '+1 234 567 890'}</a></p>
             </div>
           </section>
 

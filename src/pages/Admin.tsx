@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Users, ShieldCheck, Download, X, UserCog, Key, PanelTop } from 'lucide-react';
+import { LogOut, Plus, Users, ShieldCheck, Download, X, UserCog, Key, PanelTop, MessageCircle, FileText, Printer, Bell } from 'lucide-react';
 import IdCardView from '../components/IdCardView';
+import InvoiceView from '../components/InvoiceView';
+import InvoicesList from '../components/InvoicesList';
+import UserProfileModal from '../components/UserProfileModal';
+import UserProfile from '../components/UserProfile';
+import NoticesAdmin from '../components/NoticesAdmin';
+import UserNotices from '../components/UserNotices';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { useSiteContent } from '../context/ContentContext';
 import SiteContentEditor from '../components/SiteContentEditor';
+import LiveChatAdmin from '../components/LiveChatAdmin';
 import { Helmet } from 'react-helmet-async';
 
 interface Trainee {
@@ -22,6 +29,8 @@ interface Trainee {
   approvedBy: string;
   levelCategory: string;
   status: string;
+  addedBy?: string;
+  createdAt?: number;
 }
 
 interface AppUser {
@@ -29,20 +38,36 @@ interface AppUser {
   username: string;
   name: string;
   role?: string;
+  due?: number;
+}
+
+interface Invoice {
+  id: string;
+  userId: string;
+  username?: string;
+  amount: number;
+  status: string;
+  createdAt: number;
 }
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState<'trainees' | 'settings' | 'users' | 'profile' | 'site'>('trainees');
+  const [activeTab, setActiveTab] = useState<'trainees' | 'settings' | 'users' | 'profile' | 'site' | 'chat' | 'invoices' | 'notices'>('trainees');
   const [trainees, setTrainees] = useState<Trainee[]>([]);
   const [courses, setCourses] = useState<string[]>([]);
   const [branches, setBranches] = useState<string[]>([]);
   const [appUsers, setAppUsers] = useState<AppUser[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+
+  const isAdmin = currentUser?.role !== 'user' || currentUser?.username === 'admin';
 
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null);
   const [editingTraineeId, setEditingTraineeId] = useState<string | null>(null);
+  const [selectedInvoiceUser, setSelectedInvoiceUser] = useState<AppUser | null>(null);
+  const [selectedUserProfile, setSelectedUserProfile] = useState<AppUser | null>(null);
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
   const navigate = useNavigate();
 
   // Form states
@@ -97,21 +122,26 @@ export default function Admin() {
 
   const fetchData = async (user: AppUser | null) => {
     try {
-      const isAdmin = user?.role !== 'user' || user?.username === 'admin';
-      const traineeUrl = !isAdmin ? `/api/trainees?userId=${user.id}&role=user` : '/api/trainees';
-      const [traineesRes, settingsRes, usersRes] = await Promise.all([
+      const isUserAdmin = user?.role !== 'user' || user?.username === 'admin';
+      const traineeUrl = !isUserAdmin ? `/api/trainees?userId=${user?.id}&role=user` : '/api/trainees';
+      const invoicesUrl = !isUserAdmin ? `/api/invoices?userId=${user?.id}` : '/api/invoices';
+      
+      const [traineesRes, settingsRes, usersRes, invoicesRes] = await Promise.all([
         fetch(traineeUrl),
         fetch('/api/settings'),
-        fetch('/api/users')
+        fetch('/api/users'),
+        fetch(invoicesUrl)
       ]);
       const traineesData = await traineesRes.json();
       const settingsData = await settingsRes.json();
       const usersData = await usersRes.json();
+      const invoicesData = await invoicesRes.json();
       
       setTrainees(traineesData);
       setCourses(settingsData.courses);
       setBranches(settingsData.branches);
       setAppUsers(usersData);
+      setInvoices(invoicesData);
       if (settingsData.courses.length > 0) setCourse(settingsData.courses[0]);
       if (settingsData.branches.length > 0) setProject(settingsData.branches[0]);
     } catch (e) {
@@ -150,6 +180,14 @@ export default function Admin() {
           setEditingTraineeId(null);
         } else {
           setTrainees([data.trainee, ...trainees]);
+          // Refresh users to get updated due amount
+          try {
+            const uRes = await fetch('/api/users');
+            if (uRes.ok) {
+              const uData = await uRes.json();
+              setAppUsers(uData);
+            }
+          } catch(err) {}
         }
         // Reset form
         setName('');
@@ -281,6 +319,62 @@ export default function Admin() {
     } catch (e) {}
   };
 
+  const handlePayBill = async (id: string) => {
+    if (!confirm('Mark this user\'s bill as paid?')) return;
+    try {
+      const res = await fetch(`/api/users/${id}/pay`, { method: 'PUT' });
+      const data = await res.json();
+      if (data.success) {
+        setAppUsers(appUsers.map(u => u.id === id ? { ...u, due: 0 } : u));
+        setInvoices(invoices.map(inv => inv.userId === id ? { ...inv, status: 'paid' } : inv));
+        alert('Bill marked as paid!');
+      } else {
+        alert(data.message);
+      }
+    } catch (e) {}
+  };
+
+  const handlePayInvoice = async (id: string) => {
+    if (!confirm('Mark this invoice as paid?')) return;
+    try {
+      const res = await fetch(`/api/invoices/${id}/pay`, { method: 'PUT' });
+      const data = await res.json();
+      if (data.success) {
+        const paidInvoice = invoices.find(inv => inv.id === id);
+        if (paidInvoice) {
+          setInvoices(invoices.map(inv => inv.id === id ? { ...inv, status: 'paid' } : inv));
+          // Refresh user dues
+          const uRes = await fetch('/api/users');
+          if (uRes.ok) {
+            const uData = await uRes.json();
+            setAppUsers(uData);
+          }
+        }
+        alert('Invoice marked as paid and payment receipt email notification sent!');
+      } else {
+        alert(data.message);
+      }
+    } catch (e) {}
+  };
+
+  const handleMarkOverdue = async (id: string) => {
+    if (!confirm('Mark this invoice as overdue and send a reminder email?')) return;
+    try {
+      const res = await fetch(`/api/invoices/${id}/notify`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'overdue_reminder' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInvoices(invoices.map(inv => inv.id === id ? { ...inv, status: 'overdue' } : inv));
+        alert('Invoice marked as overdue and email reminder sent!');
+      } else {
+        alert(data.message);
+      }
+    } catch (e) {}
+  };
+
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -325,6 +419,33 @@ export default function Admin() {
     }
   };
 
+  const handleDownloadInvoicePDF = async () => {
+    const element = document.getElementById('invoice-capture');
+    if (!element || !selectedInvoiceUser) return;
+    
+    setIsGeneratingInvoice(true);
+    try {
+      const dataUrl = await toPng(element, { 
+        pixelRatio: 2,
+        backgroundColor: '#ffffff'
+      });
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [element.offsetWidth, element.offsetHeight]
+      });
+      
+      pdf.addImage(dataUrl, 'PNG', 0, 0, element.offsetWidth, element.offsetHeight);
+      pdf.save(`Invoice_${selectedInvoiceUser.username}.pdf`);
+    } catch (e) {
+      console.error('Error generating Invoice:', e);
+      alert('Failed to generate Invoice. Please try again.');
+    } finally {
+      setIsGeneratingInvoice(false);
+    }
+  };
+
   if (isLoading) return <div className="text-center p-20">Loading Dashboard...</div>;
 
   return (
@@ -347,6 +468,12 @@ export default function Admin() {
                 Trainees
               </button>
             </li>
+            <li>
+              <button onClick={() => setActiveTab('notices')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'notices' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
+                <Bell className="w-5 h-5 text-blue-400" />
+                Notices
+              </button>
+            </li>
             {(currentUser?.role !== 'user' || currentUser?.username === 'admin') && (
               <>
                 <li>
@@ -365,6 +492,18 @@ export default function Admin() {
                   <button onClick={() => setActiveTab('site')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'site' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
                     <PanelTop className="w-5 h-5 text-blue-400" />
                     Site Content
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'chat' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
+                    <MessageCircle className="w-5 h-5 text-blue-400" />
+                    Live Chat
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => setActiveTab('invoices')} className={`flex items-center gap-3 p-3 rounded-md w-full font-medium transition-colors ${activeTab === 'invoices' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
+                    <FileText className="w-5 h-5 text-blue-400" />
+                    Invoices
                   </button>
                 </li>
               </>
@@ -393,10 +532,25 @@ export default function Admin() {
             {activeTab === 'trainees' ? 'Trainee Management' : 
              activeTab === 'users' ? 'User Administration' :
              activeTab === 'site' ? 'Site Content' :
+             activeTab === 'chat' ? 'Live Chat Support' :
+             activeTab === 'invoices' ? 'Billing & Invoices' :
+             activeTab === 'notices' ? 'System Notices' :
              activeTab === 'profile' ? 'My Profile' :
              'Admin Settings'}
           </h1>
+          {!isAdmin && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
+              <span className="text-sm font-medium">Due Balance:</span>
+              <span className="text-lg font-black">{appUsers.find(u => u.id === currentUser?.id)?.due || 0} SAR</span>
+            </div>
+          )}
         </div>
+
+        {activeTab === 'chat' && <LiveChatAdmin />}
+        {activeTab === 'invoices' && <InvoicesList invoices={invoices} setInvoices={setInvoices} onPayInvoice={handlePayInvoice} onMarkOverdue={handleMarkOverdue} />}
+        {activeTab === 'notices' && (
+          isAdmin ? <NoticesAdmin users={appUsers} /> : <UserNotices userId={currentUser?.id || ''} />
+        )}
 
         {activeTab === 'settings' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
@@ -434,24 +588,42 @@ export default function Admin() {
           </div>
         )}
 
-        {activeTab === 'profile' && (
-          <div className="max-w-md bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Change My Password</h2>
-            <form onSubmit={(e) => { e.preventDefault(); setPasswordChangeTarget(currentUser?.id || null); handleUpdatePassword(e); }} className="space-y-4">
-               <div>
-                  <label className="block text-sm font-medium text-gray-700">New Password</label>
-                  <input required type="password" value={newPasswordValue} onChange={e=>setNewPasswordValue(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-gray-50" />
-               </div>
-               <button type="submit" className="w-full bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-800 font-medium">Update Password</button>
-            </form>
+        {activeTab === 'profile' && currentUser && (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="xl:col-span-2">
+              <UserProfile 
+                user={appUsers.find(u => u.id === currentUser.id) || currentUser}
+                trainees={trainees.filter(t => t.addedBy === currentUser.id)}
+                invoices={invoices.filter(i => i.userId === currentUser.id)}
+                onViewInvoice={(u) => setSelectedInvoiceUser(u)}
+              />
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Change My Password</h2>
+              <form onSubmit={(e) => { e.preventDefault(); setPasswordChangeTarget(currentUser?.id || null); handleUpdatePassword(e); }} className="space-y-4">
+                 <div>
+                    <label className="block text-sm font-medium text-gray-700">New Password</label>
+                    <input required type="password" value={newPasswordValue} onChange={e=>setNewPasswordValue(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-gray-50" />
+                 </div>
+                 <button type="submit" className="w-full bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-800 font-medium">Update Password</button>
+              </form>
+            </div>
           </div>
         )}
 
         {activeTab === 'users' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
-               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><UserCog className="w-5 h-5 text-blue-700" /> Add New User</h2>
-               <form onSubmit={handleAddUser} className="space-y-4">
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg flex items-center gap-3">
+              <UserCog className="w-6 h-6 text-blue-600 flex-shrink-0" />
+              <div>
+                <h3 className="font-bold text-sm">User Profiles are Active</h3>
+                <p className="text-xs mt-1">Click the <strong>View Profile</strong> button next to any user to see their detailed activity, track which trainees they've added, view their invoices, and manually debit/credit their due balance.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
+                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><UserCog className="w-5 h-5 text-blue-700" /> Add New User</h2>
+                 <form onSubmit={handleAddUser} className="space-y-4">
                  <div>
                     <label className="block text-sm font-medium text-gray-700">Full Name</label>
                     <input required type="text" value={newUserName} onChange={e=>setNewUserName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-gray-50" />
@@ -483,6 +655,7 @@ export default function Admin() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due (SAR)</th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                       </tr>
                     </thead>
@@ -500,6 +673,9 @@ export default function Admin() {
                               {user.role || 'user'}
                             </span>
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-bold text-red-600">{user.due || 0} SAR</div>
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             {passwordChangeTarget === user.id ? (
                               <div className="flex items-center justify-end gap-2">
@@ -508,8 +684,15 @@ export default function Admin() {
                                 <button onClick={() => { setPasswordChangeTarget(null); setNewPasswordValue(''); }} className="text-gray-600 hover:text-gray-900 text-xs">Cancel</button>
                               </div>
                             ) : (
-                              <div className="flex justify-end gap-4">
+                              <div className="flex justify-end gap-3 items-center">
+                                {(user.due && user.due > 0) ? (
+                                  <>
+                                    <button onClick={() => setSelectedInvoiceUser(user)} className="text-[#002f6c] hover:text-blue-900 text-xs font-bold bg-blue-50 px-2 py-1 rounded flex items-center gap-1"><FileText size={12} /> Invoice</button>
+                                    <button onClick={() => handlePayBill(user.id)} className="text-green-600 hover:text-green-900 text-xs font-bold bg-green-50 px-2 py-1 rounded">Mark Paid</button>
+                                  </>
+                                ) : null}
                                 <button onClick={() => { setPasswordChangeTarget(user.id); setNewPasswordValue(''); }} className="text-blue-600 hover:text-blue-900 text-xs flex items-center gap-1"><Key className="w-3 h-3" /> Password</button>
+                                <button onClick={() => setSelectedUserProfile(user)} className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs flex items-center gap-1 px-3 py-1.5 rounded shadow-sm transition-colors"><UserCog className="w-3 h-3" /> View Profile</button>
                                 {currentUser?.id !== user.id && (
                                   <button onClick={() => handleDeleteUser(user.id)} className="text-red-600 hover:text-red-900 text-xs">Delete</button>
                                 )}
@@ -522,6 +705,7 @@ export default function Admin() {
                  </table>
                </div>
             </div>
+          </div>
           </div>
         )}
 
@@ -641,6 +825,7 @@ export default function Admin() {
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trainee Info</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course / Project</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    {isAdmin && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Added By</th>}
                     <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -667,6 +852,25 @@ export default function Admin() {
                           {trainee.status}
                         </span>
                       </td>
+                      {isAdmin && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {trainee.addedBy ? (() => {
+                            const adder = appUsers.find(u => u.id === trainee.addedBy);
+                            return adder ? (
+                              <button 
+                                onClick={() => setSelectedUserProfile(adder)}
+                                className="text-sm text-blue-600 hover:text-blue-900 hover:underline flex items-center gap-1 font-medium"
+                              >
+                                <UserCog className="w-3 h-3" /> {adder.name}
+                              </button>
+                            ) : (
+                              <span className="text-sm text-gray-500">System</span>
+                            );
+                          })() : (
+                            <span className="text-sm text-gray-500">System</span>
+                          )}
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                         <button onClick={() => setSelectedTrainee(trainee)} className="text-blue-600 hover:text-blue-900">View ID</button>
                         <button onClick={() => handleEditClick(trainee)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
@@ -716,6 +920,61 @@ export default function Admin() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Invoice Modal */}
+      {selectedInvoiceUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm overflow-y-auto">
+          <div className="relative py-12">
+            <button 
+              onClick={() => setSelectedInvoiceUser(null)}
+              className="absolute top-4 right-0 text-white hover:text-gray-300 bg-gray-800 rounded-full p-2 z-50 shadow-lg"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <InvoiceView user={selectedInvoiceUser} invoiceNumber={`INV-${Date.now().toString().slice(-6)}`} />
+            <div className="mt-6 flex justify-center sticky bottom-4 z-50 gap-4">
+                <button onClick={() => window.print()} className="bg-white text-gray-900 border border-gray-300 font-bold px-8 py-3 rounded-full shadow-lg hover:bg-gray-50 flex items-center gap-2 transition-colors">
+                    <Printer className="w-5 h-5" /> Print Invoice
+                </button>
+                <button 
+                  onClick={handleDownloadInvoicePDF} 
+                  disabled={isGeneratingInvoice}
+                  className="bg-blue-700 text-white font-bold px-8 py-3 rounded-full shadow-lg hover:bg-blue-800 disabled:opacity-50 flex items-center gap-2 transition-colors"
+                >
+                    <Download className="w-5 h-5" />
+                    {isGeneratingInvoice ? 'Generating...' : 'Download Invoice PDF'}
+                </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal */}
+      {selectedUserProfile && (
+        <UserProfileModal
+          user={selectedUserProfile}
+          trainees={trainees.filter(t => t.addedBy === selectedUserProfile.id)}
+          invoices={invoices.filter(i => i.userId === selectedUserProfile.id)}
+          onClose={() => setSelectedUserProfile(null)}
+          onRefresh={async () => {
+             // Refresh user details
+             const uRes = await fetch('/api/users');
+             if (uRes.ok) {
+               const uData = await uRes.json();
+               setAppUsers(uData);
+               const updatedUser = uData.find((u: any) => u.id === selectedUserProfile.id);
+               if (updatedUser) setSelectedUserProfile(updatedUser);
+             }
+             // Refresh invoices
+             const isUserAdmin = currentUser?.role !== 'user' || currentUser?.username === 'admin';
+             const invoicesUrl = !isUserAdmin ? `/api/invoices?userId=${currentUser?.id}` : '/api/invoices';
+             const iRes = await fetch(invoicesUrl);
+             if (iRes.ok) {
+               setInvoices(await iRes.json());
+             }
+          }}
+        />
       )}
 
     </div>

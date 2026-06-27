@@ -29,6 +29,7 @@ import Press from './pages/Press';
 import Locations from './pages/Locations';
 import Contact from './pages/Contact';
 
+import LiveChatWidget from './components/LiveChatWidget';
 import { ContentProvider } from './context/ContentContext';
 
 export default function App() {
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="/locations" element={<Locations />} />
             <Route path="/contact" element={<Contact />} />
           </Routes>
+          <LiveChatWidget />
         </div>
       </ContentProvider>
     </Router>

@@ -27,8 +27,8 @@ export default function Home() {
   return (
     <div className="bg-white">
       <Helmet>
-        <title>{content?.heroTitle || 'Certiva TUV'} - Home</title>
-        <meta name="description" content={content?.heroSubtitle || 'Professional Certification & Training Services'} />
+        <title>{content?.hero?.title1 || 'Certiva TUV'} - Home</title>
+        <meta name="description" content={content?.hero?.subtitle || 'Professional Certification & Training Services'} />
       </Helmet>
       <Navbar />
       <motion.div
